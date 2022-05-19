@@ -150,7 +150,7 @@ void loop() {
         {
          digitalOutputVal = 5;
         }
-        else if (digitalRead(S12== HIGH)
+        else if (digitalRead(S2)== HIGH)
         {
          digitalOutputVal = 6;
         }

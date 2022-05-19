@@ -14,10 +14,10 @@
 #define TFT_RESET  17
 int LED = 16;
 // Declareer de verschillende schakelaars.
-int BL = 35; // Used | BL = Bumper left
-int TL = 34; // Used | TL = Trigger left
-int BR = 33; // Used
-int TR = 32; // Used
+int BumperL = 35; // Used | BL = Bumper left
+int TriggerL = 34; // Used | TL = Trigger left
+int BumperR = 33; // Used
+int TriggerR = 32; // Used
 int S1 = 25; // Used
 int S2 = 26; // Used
 int analogInputPinX = 2; // Used
@@ -86,10 +86,10 @@ void setup() {
   digitalWrite(LED, HIGH);
   
   Serial.begin(115200);
-  pinMode (BL, INPUT);
-  pinMode (TL, INPUT);
-  pinMode (BR, INPUT);
-  pinMode (TR, INPUT);
+  pinMode (BumperL, INPUT);
+  pinMode (TriggerL, INPUT);
+  pinMode (BumperR, INPUT);
+  pinMode (TriggerR, INPUT);
   pinMode (S1, INPUT);
   pinMode (S2, INPUT);
   pinMode(analogInputPinX,   INPUT);
@@ -128,21 +128,21 @@ void loop() {
     analogInputValY = analogRead(analogInputPinY);
     digitalInputVal = digitalRead(digitalInputPin);
     
-    if (digitalRead(BL) == HIGH)
+    if (digitalRead(BumperL) == HIGH)
         {
         digitalOutputVal = 1;
         }
         // Stuur 2 wanneer schakelaar S2 aan pin 35 wordt ingedrukt.
-        else if (digitalRead(TL) == HIGH)
+        else if (digitalRead(TriggerL) == HIGH)
         {
          digitalOutputVal = 2;
         }
         // Stuur 3 wanneer schakelaar S3 aan pin 32 wordt ingedrukt.
-        else if (digitalRead(BR)== HIGH)
+        else if (digitalRead(BumperR)== HIGH)
         {
          digitalOutputVal = 3;
         }
-        else if (digitalRead(TR)== HIGH)
+        else if (digitalRead(TriggerR)== HIGH)
         {
          digitalOutputVal = 4;
         }

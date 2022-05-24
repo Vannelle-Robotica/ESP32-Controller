@@ -82,7 +82,6 @@ void setup() {
   display.setCursor(20, 20);    // Plaats de cursor op zijn beginstand om vanaf daar te schrijven (lezend in pixels).
   display.setTextSize(2);       // Stel de grootte van de tekst in (The value 1 (default) corresponds to 6×8 pixels, 2 to 12×16, 3 to 18×24, and so on).
   display.setTextColor(BLUE);   // Stel de kleur van de tekst in (andere kleuren staan in de library #include <U8g2lib.h> of zie deze pagina: https://techtutorialsx.com/2021/01/31/esp32-ili9341-display-hello-world/ ).
-  display.print("I'm Alive!");  // Geef de tekst weer op de display.
   digitalWrite(LED, HIGH);
   
   Serial.begin(115200);
@@ -156,7 +155,11 @@ void loop() {
         }
       connCharacteristic->setValue(std::to_string(digitalOutputVal)+"\n");
       connCharacteristic->notify();
-    
+ 
+    display.println("Mode:");
+    display.println(digitalOutputVal);
+
+ 
     if(last_analogInputValY+5 != analogInputValY || last_analogInputValY-5 != analogInputValY )
     {
         connCharacteristic->setValue(std::to_string(analogInputValY)+"\n");

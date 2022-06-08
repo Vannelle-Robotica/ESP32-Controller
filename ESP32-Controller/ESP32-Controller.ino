@@ -13,6 +13,9 @@
 #define TFT_CS     22 // Klopt
 #define TFT_DC     21 // Klopt
 #define TFT_RESET  17 // Klopt
+
+using namespace Controller;
+
 int LED = 16;         // Klopt
 // Definieer pins voor de schakelaars en joysticks.
 int BumperL = 35;     // Klopt | BL = Bumper left
@@ -40,33 +43,20 @@ std::string controllerOutput;
 std::string lastControllerOutput;
 
 int mappedx;
-bool SingleUse = 0;          // Variabele die het printen van activatie maar 1 keer uitvoert
 int digitalOutputVal = 0;
-BLEServer *pServer = NULL;
-BLECharacteristic * connCharacteristic;
-bool deviceConnected = false;
-bool oldDeviceConnected = false;
- 
-#define SERVICE_UUID        "6E400001-B5A3-F393-E0A9-E50E24DCCA9E"
-#define CHARACTERISTIC_UUID "6E400002-B5A3-F393-E0A9-E50E24DCCA9E"
 
 Arduino_ESP32SPI bus = Arduino_ESP32SPI(TFT_DC, TFT_CS, TFT_SCK, TFT_MOSI, TFT_MISO);
 Arduino_ILI9341 display = Arduino_ILI9341(&bus, TFT_RESET);
-class MyServerCallbacks: public BLEServerCallbacks {
-    void onConnect(BLEServer* pServer) {
-      Serial.println("Connected");
-      deviceConnected = true;
-    };
-    void onDisconnect(BLEServer* pServer) {
-      Serial.println("Disconnected");
-      deviceConnected = false;
-    }
-};
+
+
+void onReceive(const std::string &);
+
+Bluetooth *bluetooth;
+
 void sendControllerOutput() {
   controllerOutput = ("d " + directions + " b " + std::to_string(digitalOutputVal) + " s " + std::to_string(mappedx));
   if(controllerOutput != lastControllerOutput){
-    connCharacteristic->setValue(controllerOutput +"\n");
-    connCharacteristic->notify();
+    bluetooth->write(controllerOutput +"\n");
   }
    
   lastControllerOutput = controllerOutput;
@@ -88,33 +78,6 @@ void refreshDisplay() {
    display.setCursor(20,120);
    display.print("x waarde : " + String(mappedx));
 }
-
-
-
- 
-class MyCallbacks: public BLECharacteristicCallbacks {
-  
-    void onWrite(BLECharacteristic *characteristic) {
-      std::string value = characteristic->getValue();
-      if (value.length() > 0) {
-        Serial.print("Received Value: ");
-        for (int i = 0; i < value.length(); i++)
-          Serial.print(value[i]);
-        Serial.println();
-      }
-    }
-
-    void onRead(BLECharacteristic *characteristic) {
-      std::string value = characteristic->getValue();
-
-      if (value.length() > 0) {
-        Serial.print("Writing: ");
-        for (int i = 0; i < value.length(); i++)
-          Serial.print(value[i]);
-        Serial.println();
-      }
-    }
-};
 
 void setup() {
   pinMode (LED, OUTPUT);
@@ -139,35 +102,16 @@ void setup() {
   pinMode(analogInputPinX1,   INPUT);
   pinMode(analogInputPinY1,   INPUT);
   pinMode(analogInputPinX2,   INPUT);
+
+  bluetooth = new Bluetooth("ESP32 Controller", onReceive);
+}
+
+void onReceive(const std::string &) {
   
-  // Create the BLE Device
-  BLEDevice::init("ESP32 Controller");
- 
-  // Create the BLE Server
-  pServer = BLEDevice::createServer();
-  pServer->setCallbacks(new MyServerCallbacks());
- 
-  // Create the BLE Service
-  BLEService *pService = pServer->createService(SERVICE_UUID);
- 
-  // Create a BLE Characteristic
-  connCharacteristic = pService->createCharacteristic(
-                                            CHARACTERISTIC_UUID,
-                                            BLECharacteristic::PROPERTY_NOTIFY |
-                                            BLECharacteristic::PROPERTY_READ | 
-                                            BLECharacteristic::PROPERTY_WRITE
-                                        );
-  connCharacteristic ->addDescriptor(new BLE2902());
-  connCharacteristic ->setCallbacks(new MyCallbacks());
-  pService->start();
- 
-  // Start advertising
-  pServer->getAdvertising()->start();
-  Serial.println("Waiting a client connection to notify...");
 }
 
 void loop(){
-
+    
 
     analogInputValX1 = analogRead(analogInputPinX1);
     analogInputValY1 = analogRead(analogInputPinY1);
@@ -178,8 +122,6 @@ void loop(){
     if (digitalRead(BumperL) == HIGH)
         {
         digitalOutputVal = 1;
-        connCharacteristic->setValue(std::to_string(digitalOutputVal)+"\n");
-        connCharacteristic->notify();
         refreshDisplay();
         }
         
@@ -187,8 +129,6 @@ void loop(){
     if (digitalRead(TriggerL) == HIGH)
         {
          digitalOutputVal = 2;
-         connCharacteristic->setValue(std::to_string(digitalOutputVal)+"\n");
-         connCharacteristic->notify();
         refreshDisplay();
 
         }
@@ -197,8 +137,6 @@ void loop(){
     if (digitalRead(BumperR)== HIGH)
         {
          digitalOutputVal = 3;
-         connCharacteristic->setValue(std::to_string(digitalOutputVal)+"\n");
-         connCharacteristic->notify();
          refreshDisplay();
 
         }
@@ -207,8 +145,6 @@ void loop(){
     if (digitalRead(TriggerR)== HIGH)
         {
          digitalOutputVal = 4;
-         connCharacteristic->setValue(std::to_string(digitalOutputVal)+"\n");
-         connCharacteristic->notify();
          refreshDisplay();
         }
         
@@ -216,9 +152,6 @@ void loop(){
     if (digitalRead(S1)== HIGH)
         {
          digitalOutputVal = 5;
-         
-         connCharacteristic->setValue(std::to_string(digitalOutputVal)+"\n");
-         connCharacteristic->notify();
          refreshDisplay();
         }
         
@@ -226,8 +159,6 @@ void loop(){
     if (digitalRead(S2)== HIGH)
         {
          digitalOutputVal = 6;
-         connCharacteristic->setValue(std::to_string(digitalOutputVal)+"\n");
-         connCharacteristic->notify();
          refreshDisplay();
 
         }
@@ -236,8 +167,6 @@ void loop(){
     if (digitalRead(digitalInputVal)== LOW)
         {
          digitalOutputVal = 7;
-         connCharacteristic->setValue(std::to_string(digitalOutputVal)+"\n");
-         connCharacteristic->notify();
          refreshDisplay();        
         }
     if(analogInputValX1 >= 4000 && analogInputValY1 >= 0 && analogInputValY1 <= 4000)
@@ -285,44 +214,13 @@ void loop(){
       directions = "s"; 
       directionDisplay = "s";
     }
-          
-    // Lees de Y-waarde van Joystick 1 (+) uit en stuur deze via bluetooth naar de robot.
-    if(lastDirections != directions )
-      {
-        connCharacteristic->setValue(directions+"\n");
-        connCharacteristic->notify(); 
-        lastDirections = directions;// Reset de laatste waarde door deze te overschrijven met de nieuwe waarde.
-      }
+ 
 
       // Lees de X-waarde van Joystick 2 (T) uit en stuur deze via bluetooth naar de robot.
     if(analogInputValX2 >= last_analogInputValX2 || analogInputValX2 <= last_analogInputValX2)
     {
-        //map(analogInputValX2, fromLow, fromHigh, toLow, toHigh)
         mappedx = map(analogInputValX2, 0, 4095, 0, 100);
-        connCharacteristic->setValue(std::to_string(mappedx)+"\n");
-        connCharacteristic->notify(); 
         last_analogInputValX2 = analogInputValX2;   // Reset de laatste waarde door deze te overschrijven met de nieuwe waarde.
     }
-
-    if (deviceConnected && (SingleUse != 1))
-    {
-        connCharacteristic->setValue("Hello from ESP32\n");
-        connCharacteristic->notify();
-        SingleUse = 1;    // Variabele die dit maar 1 keer laat uitvoeren.
-    }
-    
-    // disconnecting
-    if (!deviceConnected && oldDeviceConnected)
-    {
-        delay(500); // give the bluetooth stack the chance to get things ready
-        pServer->startAdvertising(); // restart advertising
-        Serial.println("start advertising");
-        oldDeviceConnected = deviceConnected;
-    }
-    // connecting
-    if (deviceConnected && !oldDeviceConnected)
-    {
-        // do stuff here on connecting
-        oldDeviceConnected = deviceConnected;
-    }
+    sendControllerOutput();
 }

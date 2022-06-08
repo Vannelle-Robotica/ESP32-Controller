@@ -65,11 +65,11 @@ class MyServerCallbacks: public BLEServerCallbacks {
 void sendControllerOutput() {
   controllerOutput = ("d " + directions + " b " + std::to_string(digitalOutputVal) + " s " + std::to_string(mappedx));
   if(controllerOutput != lastControllerOutput){
-    connCharacteristic->setValue(std::to_string(controllerOutput)+"\n");
+    connCharacteristic->setValue(controllerOutput +"\n");
     connCharacteristic->notify();
   }
    
-  lastControllerOutput = controllerOutput
+  lastControllerOutput = controllerOutput;
 }
 
 void refreshDisplay() {

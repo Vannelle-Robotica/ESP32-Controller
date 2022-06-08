@@ -7,8 +7,19 @@
 namespace Controller {
 
 
-    CharacteristicCallback::CharacteristicCallback(void (*onReceive)(const std::string &)) {
-        this->onReceive = onReceive;
+    void ServerCallback::onConnect(BLEServer *) {
+        this->connected = true;
+    }
+
+
+    void ServerCallback::onDisconnect(BLEServer *server) {
+        server->startAdvertising();
+        this->connected = false;
+    }
+
+
+    CharacteristicCallback::CharacteristicCallback(void (*onReceive)(const std::string &))
+            : onReceive(onReceive) {
     }
 
 
@@ -18,12 +29,14 @@ namespace Controller {
     }
 
 
-    Bluetooth::Bluetooth(const std::string &name, void (*onReceive)(const std::string &)) {
+    Bluetooth::Bluetooth(const std::string &name, void (*onReceive)(const std::string &))
+            : serverCallback(new ServerCallback()) {
         // Initialize BLE device
         BLEDevice::init(name);
 
         // Initialize BLE server & service
         server = BLEDevice::createServer();
+        server->setCallbacks(serverCallback);
         service = server->createService(SERVICE_UUID);
 
         // Create characteristic for reading & writing
@@ -36,6 +49,7 @@ namespace Controller {
 
         // Add BLE2902 descriptor and start service
         characteristic->addDescriptor(new BLE2902());
+        characteristic->setCallbacks(new CharacteristicCallback(onReceive));
         service->start();
 
         // Start advertising bluetooth server
@@ -60,6 +74,6 @@ namespace Controller {
 
 
     bool Bluetooth::isConnected() {
-        return server->getConnectedCount() > 0;
+        return serverCallback->connected;
     }
 }

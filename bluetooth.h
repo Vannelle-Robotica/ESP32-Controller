@@ -9,6 +9,21 @@
 
 namespace Controller {
 
+    class ServerCallback : public BLEServerCallbacks {
+    private:
+        friend class Bluetooth;
+
+        ServerCallback(){
+        }
+
+        void onConnect(BLEServer *);
+
+        void onDisconnect(BLEServer *);
+
+        bool connected;
+    };
+
+
     class CharacteristicCallback : public BLECharacteristicCallbacks {
     private:
         friend class Bluetooth;
@@ -19,6 +34,7 @@ namespace Controller {
 
         void (*onReceive)(const std::string &);
     };
+
 
     class Bluetooth {
     public:
@@ -31,6 +47,8 @@ namespace Controller {
         bool isConnected();
 
     private:
+        ServerCallback *serverCallback;
+
         BLEServer *server;
         BLEService *service;
         BLECharacteristic *characteristic;

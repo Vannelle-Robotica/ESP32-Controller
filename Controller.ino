@@ -59,10 +59,7 @@ void refreshDisplay() {
    display.fillScreen(WHITE);
    delay(10);
    display.print("Mode:" + String(digitalOutputVal)); 
-   display.setCursor(20,40);
-   display.print("Y waarde:" + String(analogInputValY1));
-   display.setCursor(20,60);
-   display.print("X waarde:" + String(analogInputValX1));
+   
 }
 
  
@@ -211,7 +208,7 @@ void loop(){
          digitalOutputVal = 7;
          connCharacteristic->setValue(std::to_string(digitalOutputVal)+"\n");
          connCharacteristic->notify();
-         refreshDisplay();        
+        
         }
           
     // Lees de Y-waarde van Joystick 1 (+) uit en stuur deze via bluetooth naar de robot.
@@ -220,7 +217,6 @@ void loop(){
         connCharacteristic->setValue(std::to_string(analogInputValY1)+"\n");
         connCharacteristic->notify(); 
         last_analogInputValY1 = analogInputValY1;   // Reset de laatste waarde door deze te overschrijven met de nieuwe waarde.
-
       }
 
     // Lees de X-waarde van Joystick 1 (+) uit en stuur deze via bluetooth naar de robot.

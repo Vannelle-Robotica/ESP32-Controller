@@ -4,6 +4,7 @@
 #include <BLE2902.h>
 #include <Arduino_GFX_Library.h>
 #include <U8g2lib.h>
+//#include "display.h"
 #include "bluetooth.h"
 
 // Definieer pins voor de Display.  
@@ -16,18 +17,19 @@
 
 using namespace Controller;
 
-int LED = 16;         // Klopt
-// Definieer pins voor de schakelaars en joysticks.
-int BumperL = 35;     // Klopt | BL = Bumper left
-int TriggerL = 34;    // Klopt | TL = Trigger left
-int BumperR = 33;     // Klopt
-int TriggerR = 32;    // Klopt
-int S1 = 25;          // Klopt | (Rechter knop)
-int S2 = 26;          // Klopt | (Linker knop)
-int digitalInputPin1 = 5;   // Klopt | Rechter joystick (+) | SW
-int analogInputPinX1 = 2;   // Klopt | Rechter joystick (+) | VRx
-int analogInputPinY1 = 15;  // Klopt | Rechter joystick (+) | VRy
-int analogInputPinX2 = 4;   // Klopt | Linker joystick (T) | VRx
+// Define pins for buttons.
+int BumperL = 35;     
+int TriggerL = 34;    
+int BumperR = 33; 
+int TriggerR = 32;
+int S1 = 25;          // Right button 
+int S2 = 26;          // Left button
+// Define pins for joysticks
+int digitalInputPin1 = 5;   // Rechter joystick (+) | SW
+int analogInputPinX1 = 2;   // Rechter joystick (+) | VRx
+int analogInputPinY1 = 15;  // Rechter joystick (+) | VRy
+int analogInputPinX2 = 4;   // Linker joystick (T) | VRx
+
 long analogInputValX1;      // Variabele voor Joystick 1
 long analogInputValY1;      // Variabele voor Joystick 1
 long last_analogInputValX1; // Variabele voor Joystick 1
@@ -36,17 +38,14 @@ int digitalInputVal;        // Variabele voor Joystick 1
 long analogInputValX2;      // Variabele voor Joystick 2
 long last_analogInputValX2; // Variabele voor Joystick 2
 std::string directions= ""; 
-std::string lastDirections= ""; 
 String directionDisplay = "";
-
 std::string controllerOutput;
 std::string lastControllerOutput;
-
 int mappedx;
 int digitalOutputVal = 0;
 
-Arduino_ESP32SPI bus = Arduino_ESP32SPI(TFT_DC, TFT_CS, TFT_SCK, TFT_MOSI, TFT_MISO);
-Arduino_ILI9341 display = Arduino_ILI9341(&bus, TFT_RESET);
+Arduino_ESP32SPI bus = Arduino_ESP32SPI(TFT_DC, TFT_CS, TFT_SCK, TFT_MOSI, TFT_MISO); // Maak een data bus van klasse Arduino ESP32SPI.
+Arduino_ILI9341 display = Arduino_ILI9341(&bus, TFT_RESET); // Maak een object in de aangemaakte klasse.
 
 
 void onReceive(const std::string &);
@@ -80,10 +79,6 @@ void refreshDisplay() {
 }
 
 void setup() {
-  pinMode (LED, OUTPUT);
- // Arduino_ESP32SPI bus = Arduino_ESP32SPI(TFT_DC, TFT_CS, TFT_SCK, TFT_MOSI, TFT_MISO);     // Maak een data bus van klasse Arduino ESP32SPI.
-  //display = Arduino_ILI9341(&bus, TFT_RESET);     // Maak een object in de aangemaakte klasse.
-  
   display.begin();              // Initialiseer de display.
   display.fillScreen(WHITE);    // Zet de achtergrond kleur van de display.
   display.setCursor(20, 20);    // Plaats de cursor op zijn beginstand om vanaf daar te schrijven (lezend in pixels).
@@ -130,7 +125,6 @@ void loop(){
         {
          digitalOutputVal = 2;
         refreshDisplay();
-
         }
         
     // Stuur 3 wanneer schakelaar BumperR aan pin 33 wordt ingedrukt.
@@ -138,7 +132,6 @@ void loop(){
         {
          digitalOutputVal = 3;
          refreshDisplay();
-
         }
         
     // Stuur 4 wanneer schakelaar TriggerR aan pin 32 wordt ingedrukt.

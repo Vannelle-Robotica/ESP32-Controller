@@ -23,7 +23,7 @@ namespace Controller {
     }
 
 
-    void CharacteristicCallback::onRead(BLECharacteristic *characteristic) {
+    void CharacteristicCallback::onWrite(BLECharacteristic *characteristic) {
         std::string value = characteristic->getValue();
         onReceive(value);
     }
@@ -68,7 +68,7 @@ namespace Controller {
 
 
     void Bluetooth::write(const std::string &msg) {
-        characteristic->setValue(msg + '\n');
+        characteristic->setValue(msg);
         characteristic->notify();
     }
 

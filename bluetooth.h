@@ -30,7 +30,7 @@ namespace Controller {
 
         CharacteristicCallback(void (*)(const std::string &));
 
-        void onRead(BLECharacteristic *characteristic);
+        void onWrite(BLECharacteristic *characteristic);
 
         void (*onReceive)(const std::string &);
     };

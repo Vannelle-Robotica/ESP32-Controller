@@ -7,9 +7,10 @@
 namespace Controller {
   class Display{
     public:
-
+    
     void refresh(const String &);
-  }
+
+  };
   
 }
 #endif

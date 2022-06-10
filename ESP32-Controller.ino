@@ -1,7 +1,3 @@
-#include <BLEDevice.h>
-#include <BLEServer.h>
-#include <BLEUtils.h>
-#include <BLE2902.h>
 #include <Arduino_GFX_Library.h>
 #include <U8g2lib.h>
 //#include "display.h"
@@ -14,7 +10,7 @@
 #define TFT_CS     22 // Klopt
 #define TFT_DC     21 // Klopt
 #define TFT_RESET  17 // Klopt
-
+#define LED 16 
 using namespace Controller;
 
 // Define pins for buttons.
@@ -42,7 +38,9 @@ String directionDisplay = "";
 std::string controllerOutput;
 std::string lastControllerOutput;
 int mappedx;
+String weight;
 int digitalOutputVal = 0;
+int modes = 0;
 
 Arduino_ESP32SPI bus = Arduino_ESP32SPI(TFT_DC, TFT_CS, TFT_SCK, TFT_MOSI, TFT_MISO); // Maak een data bus van klasse Arduino ESP32SPI.
 Arduino_ILI9341 display = Arduino_ILI9341(&bus, TFT_RESET); // Maak een object in de aangemaakte klasse.
@@ -55,7 +53,7 @@ Bluetooth *bluetooth;
 void sendControllerOutput() {
   controllerOutput = ("d " + directions + " b " + std::to_string(digitalOutputVal) + " s " + std::to_string(mappedx));
   if(controllerOutput != lastControllerOutput){
-    bluetooth->write(controllerOutput +"\n");
+    bluetooth->write(controllerOutput);
   }
    
   lastControllerOutput = controllerOutput;
@@ -64,7 +62,7 @@ void sendControllerOutput() {
 void refreshDisplay() {
    display.setCursor(20,20);
    display.fillScreen(WHITE);
-   display.print("Mode: " + String(digitalOutputVal)); 
+   display.print("Button pushed: " + String(digitalOutputVal)); 
    display.setCursor(20,40);
    display.print("Y waarde: " + String(analogInputValY1));
    display.setCursor(20,60);
@@ -76,17 +74,16 @@ void refreshDisplay() {
    display.print("Direction: " + directionDisplay);
    display.setCursor(20,120);
    display.print("x waarde : " + String(mappedx));
+   display.setCursor(20,140);
+   display.print("Gewicht:  " + weight + "g");
+   display.setCursor(20,160);
+   display.print("Mode:  " + String(modes));
 }
 
 void setup() {
-  display.begin();              // Initialiseer de display.
-  display.fillScreen(WHITE);    // Zet de achtergrond kleur van de display.
-  display.setCursor(20, 20);    // Plaats de cursor op zijn beginstand om vanaf daar te schrijven (lezend in pixels).
-  display.setTextSize(2);       // Stel de grootte van de tekst in (The value 1 (default) corresponds to 6×8 pixels, 2 to 12×16, 3 to 18×24, and so on).
-  display.setTextColor(BLUE);   // Stel de kleur van de tekst in (andere kleuren staan in de library #include <U8g2lib.h> of zie deze pagina: https://techtutorialsx.com/2021/01/31/esp32-ili9341-display-hello-world/ ).
-  digitalWrite(LED, HIGH);      // Zet het display scherm aan door de pin aan LED hoog te zetten.
   
   Serial.begin(115200);
+  pinMode (LED, OUTPUT);
   pinMode (BumperL, INPUT);
   pinMode (TriggerL, INPUT);
   pinMode (BumperR, INPUT);
@@ -98,70 +95,76 @@ void setup() {
   pinMode(analogInputPinY1,   INPUT);
   pinMode(analogInputPinX2,   INPUT);
 
+  display.begin();              // Initialiseer de display.
+  display.fillScreen(WHITE);    // Zet de achtergrond kleur van de display.
+  display.setCursor(20, 20);    // Plaats de cursor op zijn beginstand om vanaf daar te schrijven (lezend in pixels).
+  display.setTextSize(2);       // Stel de grootte van de tekst in (The value 1 (default) corresponds to 6×8 pixels, 2 to 12×16, 3 to 18×24, and so on).
+  display.setTextColor(BLUE);   // Stel de kleur van de tekst in (andere kleuren staan in de library #include <U8g2lib.h> 
+  digitalWrite(LED, HIGH);      // Zet het display scherm aan door de pin aan LED hoog te zetten.
+
+
   bluetooth = new Bluetooth("ESP32 Controller", onReceive);
 }
 
-void onReceive(const std::string &) {
-  
+void onReceive(const std::string &message) {
+  weight = String(message.c_str());
+  Serial.println(weight);
 }
 
 void loop(){
-    
-
     analogInputValX1 = analogRead(analogInputPinX1);
     analogInputValY1 = analogRead(analogInputPinY1);
     digitalInputVal = digitalRead(digitalInputPin1);
     analogInputValX2 = analogRead(analogInputPinX2);
+    bool updated;
 
     // Stuur 1 wanneer schakelaar BumperL aan pin 35 wordt ingedrukt.
     if (digitalRead(BumperL) == HIGH)
         {
         digitalOutputVal = 1;
-        refreshDisplay();
+        updated = true;
         }
         
     // Stuur 2 wanneer schakelaar TriggerL aan pin 34 wordt ingedrukt.
     if (digitalRead(TriggerL) == HIGH)
         {
          digitalOutputVal = 2;
-        refreshDisplay();
+        updated = true;
         }
         
     // Stuur 3 wanneer schakelaar BumperR aan pin 33 wordt ingedrukt.
     if (digitalRead(BumperR)== HIGH)
         {
          digitalOutputVal = 3;
-         refreshDisplay();
+        updated = true;
         }
         
     // Stuur 4 wanneer schakelaar TriggerR aan pin 32 wordt ingedrukt.
     if (digitalRead(TriggerR)== HIGH)
         {
          digitalOutputVal = 4;
-         refreshDisplay();
+        updated = true;
         }
         
     // Stuur 5 wanneer schakelaar S1 aan pin 25 wordt ingedrukt.
     if (digitalRead(S1)== HIGH)
         {
          digitalOutputVal = 5;
-         refreshDisplay();
+        updated = true;
         }
         
     // Stuur 6 wanneer schakelaar S2 aan pin 26 wordt ingedrukt.
     if (digitalRead(S2)== HIGH)
         {
-         digitalOutputVal = 6;
-         refreshDisplay();
-
+         modes ++;
+         if (modes == 4 ){
+          modes = 0;
+         }
+         
+        updated = true;
         }
 
-    // Stuur 7 wanneer schakelaar digitalInputVal aan pin 5 wordt ingedrukt.
-    if (digitalRead(digitalInputVal)== LOW)
-        {
-         digitalOutputVal = 7;
-         refreshDisplay();        
-        }
+    
     if(analogInputValX1 >= 4000 && analogInputValY1 >= 0 && analogInputValY1 <= 4000)
     {
       directions = "f"; 
@@ -212,8 +215,11 @@ void loop(){
       // Lees de X-waarde van Joystick 2 (T) uit en stuur deze via bluetooth naar de robot.
     if(analogInputValX2 >= last_analogInputValX2 || analogInputValX2 <= last_analogInputValX2)
     {
-        mappedx = map(analogInputValX2, 0, 4095, 0, 100);
+        mappedx = map(analogInputValX2, 0, 4095, 0, 255);
         last_analogInputValX2 = analogInputValX2;   // Reset de laatste waarde door deze te overschrijven met de nieuwe waarde.
     }
+
+    if(updated)
+      refreshDisplay();
     sendControllerOutput();
 }

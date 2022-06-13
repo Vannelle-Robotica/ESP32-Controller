@@ -174,7 +174,7 @@ void loop() {
 
     // Lees de X-waarde van Joystick 2 (T) uit en stuur deze via bluetooth naar de robot.
     if (analogInputValX2 >= last_analogInputValX2 || analogInputValX2 <= last_analogInputValX2) {
-        mappedx = map(analogInputValX2, 0, 4095, 0, 255);
+        mappedx = map(analogInputValX2, 0, 4095, 0, 100);
         last_analogInputValX2 = analogInputValX2;
     }
 

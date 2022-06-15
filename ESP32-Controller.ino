@@ -23,10 +23,10 @@ long last_analogInputValY1; // Variabele voor Joystick 1
 int digitalInputVal;        // Variabele voor Joystick 1
 long analogInputValX2;      // Variabele voor Joystick 2
 long last_analogInputValX2; // Variabele voor Joystick 2
-std::string directions = "";
+std::string direction = "";
 std::string controllerOutput;
 std::string lastControllerOutput;
-int mappedx;
+int prevMappedX, mappedX;
 int digitalOutputVal = 0;
 
 
@@ -46,7 +46,8 @@ DisplayData displayData = {
         {"Button", ""},
         {"Direction", ""},
         {"Gewicht", ""},
-        {"Mode", ""}
+        {"Mode", ""},
+        {"Mapped", ""}
 };
 
 
@@ -55,12 +56,17 @@ Display *display;
 Bluetooth *bluetooth;
 
 void sendControllerOutput() {
-    controllerOutput = ("d " + directions + " b " + std::to_string(digitalOutputVal) + " s " + std::to_string(mappedx));
+    controllerOutput = ("d " + direction + " b " + std::to_string(digitalOutputVal) + " s " + std::to_string(mappedX));
+    
     if (controllerOutput != lastControllerOutput) {
+        Serial.println(String(controllerOutput.c_str()));
+        Serial.println(String(analogInputValX1));
+        Serial.println(String(analogInputValY1));
         bluetooth->write(controllerOutput);
     }
 
     lastControllerOutput = controllerOutput;
+    digitalOutputVal = 0;
 }
 
 void setup() {
@@ -90,6 +96,13 @@ void onReceive(const std::string &message) {
 void loop() {
     analogInputValX1 = analogRead(analogInputPinX1);
     analogInputValY1 = analogRead(analogInputPinY1);
+    
+    if(analogInputValY1 > 4000 && last_analogInputValY1 <= 2000) analogInputValY1 = last_analogInputValY1;
+
+    displayData["X1"] = analogInputValX1;
+    displayData["Y1"] = analogInputValY1;
+    last_analogInputValX1 = analogInputValX1;
+    last_analogInputValY1 = analogInputValY1;
     
     digitalInputVal = digitalRead(digitalInputPin1);
     analogInputValX2 = analogRead(analogInputPinX2);
@@ -138,44 +151,49 @@ void loop() {
     }
 
     if (analogInputValX1 >= 4000 && analogInputValY1 >= 0 && analogInputValY1 <= 4000) {
-        directions = "f";
+        direction = "f";
         displayData["Direction"] = "f";
     }
     
     if (analogInputValX1 <= 1500 && analogInputValY1 >= 0 && analogInputValY1 <= 4000) {
-        directions = "b";
+        direction = "b";
         displayData["Direction"] = "b";
     }
     
     if (analogInputValY1 >= 4000 && analogInputValX1 >= 0 && analogInputValX1 <= 4000) {
-        directions = "rr";
+        direction = "rr";
         displayData["Direction"] = "rr";
     }
     
     if (analogInputValY1 <= 1800 && analogInputValX1 >= 0 && analogInputValX1 <= 4000) {
-        directions = "rl";
+        direction = "rl";
         displayData["Direction"] = "rl";
     }
     
     if (analogInputValY1 >= 4000 && analogInputValX1 >= 4000 || analogInputValX1 == 0 && analogInputValY1 >= 4000) {
-        directions = "tr";
+        direction = "tr";
         displayData["Direction"] = "tr";
     }
 
     if (analogInputValY1 == 0 && analogInputValX1 >= 4000 || analogInputValX1 == 0 && analogInputValY1 == 0) {
-        directions = "tl";
+        direction = "tl";
         displayData["Direction"] = "tl";
     }
     
     if (analogInputValX1 > 0 && analogInputValX1 <= 4000 && analogInputValY1 > 0 && analogInputValY1 <= 4000) {
-        directions = "s";
+        direction = "s";
         displayData["Direction"] = "s";
     }
 
     // Lees de X-waarde van Joystick 2 (T) uit en stuur deze via bluetooth naar de robot.
     if (analogInputValX2 >= last_analogInputValX2 || analogInputValX2 <= last_analogInputValX2) {
-        mappedx = map(analogInputValX2, 0, 4095, 0, 255);
+        mappedX = map(analogInputValX2, 0, 4095, 0, 100);
+        if(mappedX >= 42 && mappedX <= 50) mappedX = 46;
+        if(mappedX == 100 && prevMappedX <= 46) mappedX = 46;
+        
         last_analogInputValX2 = analogInputValX2;
+        displayData["Mapped"] = String(mappedX);
+        prevMappedX = mappedX;
     }
 
     display->update();

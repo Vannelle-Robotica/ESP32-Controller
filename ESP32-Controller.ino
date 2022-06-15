@@ -57,7 +57,7 @@ Bluetooth *bluetooth;
 
 void sendControllerOutput() {
     controllerOutput = ("d " + direction + " b " + std::to_string(digitalOutputVal) + " s " + std::to_string(mappedX));
-    
+
     if (controllerOutput != lastControllerOutput) {
         Serial.println(String(controllerOutput.c_str()));
         Serial.println(String(analogInputValX1));
@@ -103,7 +103,7 @@ void loop() {
     displayData["Y1"] = analogInputValY1;
     last_analogInputValX1 = analogInputValX1;
     last_analogInputValY1 = analogInputValY1;
-    
+
     digitalInputVal = digitalRead(digitalInputPin1);
     analogInputValX2 = analogRead(analogInputPinX2);
 
@@ -190,7 +190,7 @@ void loop() {
         mappedX = map(analogInputValX2, 0, 4095, 0, 100);
         if(mappedX >= 42 && mappedX <= 50) mappedX = 46;
         if(mappedX == 100 && prevMappedX <= 46) mappedX = 46;
-        
+
         last_analogInputValX2 = analogInputValX2;
         displayData["Mapped"] = String(mappedX);
         prevMappedX = mappedX;

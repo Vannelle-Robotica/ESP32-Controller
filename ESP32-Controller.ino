@@ -43,6 +43,7 @@ int mode;
 
 
 DisplayData displayData = {
+        {"Connected", ""},
         {"Button", ""},
         {"Direction", ""},
         {"Gewicht", ""},
@@ -55,13 +56,19 @@ Display *display;
 
 Bluetooth *bluetooth;
 
+void onReceive(const std::string &);
+
 void sendControllerOutput() {
-    controllerOutput = ("d " + direction + " b " + std::to_string(digitalOutputVal) + " s " + std::to_string(mappedX));
+    // Make sure controller input is sent on connect
+    if(!bluetooth->isConnected()) {
+      lastControllerOutput = "";
+      return;
+    }
+  
+    controllerOutput = ("d " + direction + " m " + std::to_string(mode) + " b " + std::to_string(digitalOutputVal) + " s " + std::to_string(mappedX));
 
     if (controllerOutput != lastControllerOutput) {
         Serial.println(String(controllerOutput.c_str()));
-        Serial.println(String(analogInputValX1));
-        Serial.println(String(analogInputValY1));
         bluetooth->write(controllerOutput);
     }
 
@@ -99,6 +106,7 @@ void loop() {
     
     if(analogInputValY1 > 4000 && last_analogInputValY1 <= 2000) analogInputValY1 = last_analogInputValY1;
 
+    displayData["Connected"] = bluetooth->isConnected();
     displayData["X1"] = analogInputValX1;
     displayData["Y1"] = analogInputValY1;
     last_analogInputValX1 = analogInputValX1;
@@ -147,6 +155,7 @@ void loop() {
           modePressed = true;
         }
     }else {
+      //Serial.println("Reset");
         modePressed = false;
     }
 

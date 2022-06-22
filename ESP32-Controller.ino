@@ -30,11 +30,11 @@ int prevMappedX, mappedX;
 int digitalOutputVal = 0;
 
 
-String modes[4] = { 
-  "Autonomous",
-  "Controlled",
-  "LineDance",
-  "Dancing"
+lString modes[4] = {
+        "Autonomous",
+        "Controlled",
+        "LineDance",
+        "Dancing"
 };
 
 
@@ -44,11 +44,11 @@ int mode;
 
 DisplayData displayData = {
         {"Connected", ""},
-        {"Button", ""},
+        {"Button",    ""},
         {"Direction", ""},
-        {"Gewicht", ""},
-        {"Mode", ""},
-        {"Mapped", ""}
+        {"Gewicht",   ""},
+        {"Mode",      ""},
+        {"Mapped",    ""}
 };
 
 
@@ -60,12 +60,13 @@ void onReceive(const std::string &);
 
 void sendControllerOutput() {
     // Make sure controller input is sent on connect
-    if(!bluetooth->isConnected()) {
-      lastControllerOutput = "";
-      return;
+    if (!bluetooth->isConnected()) {
+        lastControllerOutput = "";
+        return;
     }
-  
-    controllerOutput = ("d " + direction + " m " + std::to_string(mode) + " b " + std::to_string(digitalOutputVal) + " s " + std::to_string(mappedX));
+
+    controllerOutput = "d " + direction + " m " + std::to_string(mode) + " b " + std::to_string(digitalOutputVal) +
+                       " s " + std::to_string(mappedX);
 
     if (controllerOutput != lastControllerOutput) {
         Serial.println(String(controllerOutput.c_str()));
@@ -103,10 +104,10 @@ void onReceive(const std::string &message) {
 void loop() {
     analogInputValX1 = analogRead(analogInputPinX1);
     analogInputValY1 = analogRead(analogInputPinY1);
-    
-    if(analogInputValY1 > 4000 && last_analogInputValY1 <= 2000) analogInputValY1 = last_analogInputValY1;
 
-    displayData["Connected"] = bluetooth->isConnected();
+    if (analogInputValY1 > 4000 && last_analogInputValY1 <= 2000) analogInputValY1 = last_analogInputValY1;
+
+    displayData["Connected"] = bluetooth->isConnected() ? "True" : "False";
     displayData["X1"] = analogInputValX1;
     displayData["Y1"] = analogInputValY1;
     last_analogInputValX1 = analogInputValX1;
@@ -147,15 +148,15 @@ void loop() {
 
     // Stuur 6 wanneer schakelaar S2 aan pin 26 wordt ingedrukt.
     if (digitalRead(S2) == HIGH) {
-        if(!modePressed) {
-          if (++mode == 4)
-              mode = 0;
-          
-          displayData["Mode"] = modes[mode];
-          modePressed = true;
+        if (!modePressed) {
+            if (++mode == 4)
+                mode = 0;
+
+            displayData["Mode"] = modes[mode];
+            modePressed = true;
         }
-    }else {
-      //Serial.println("Reset");
+    } else {
+        //Serial.println("Reset");
         modePressed = false;
     }
 
@@ -163,22 +164,22 @@ void loop() {
         direction = "f";
         displayData["Direction"] = "f";
     }
-    
+
     if (analogInputValX1 <= 1500 && analogInputValY1 >= 0 && analogInputValY1 <= 4000) {
         direction = "b";
         displayData["Direction"] = "b";
     }
-    
+
     if (analogInputValY1 >= 4000 && analogInputValX1 >= 0 && analogInputValX1 <= 4000) {
         direction = "rr";
         displayData["Direction"] = "rr";
     }
-    
+
     if (analogInputValY1 <= 1800 && analogInputValX1 >= 0 && analogInputValX1 <= 4000) {
         direction = "rl";
         displayData["Direction"] = "rl";
     }
-    
+
     if (analogInputValY1 >= 4000 && analogInputValX1 >= 4000 || analogInputValX1 == 0 && analogInputValY1 >= 4000) {
         direction = "tr";
         displayData["Direction"] = "tr";
@@ -188,7 +189,7 @@ void loop() {
         direction = "tl";
         displayData["Direction"] = "tl";
     }
-    
+
     if (analogInputValX1 > 0 && analogInputValX1 <= 4000 && analogInputValY1 > 0 && analogInputValY1 <= 4000) {
         direction = "s";
         displayData["Direction"] = "s";
@@ -197,8 +198,8 @@ void loop() {
     // Lees de X-waarde van Joystick 2 (T) uit en stuur deze via bluetooth naar de robot.
     if (analogInputValX2 >= last_analogInputValX2 || analogInputValX2 <= last_analogInputValX2) {
         mappedX = map(analogInputValX2, 0, 4095, 0, 100);
-        if(mappedX >= 42 && mappedX <= 50) mappedX = 46;
-        if(mappedX == 100 && prevMappedX <= 46) mappedX = 46;
+        if (mappedX >= 42 && mappedX <= 50) mappedX = 46;
+        if (mappedX == 100 && prevMappedX <= 46) mappedX = 46;
 
         last_analogInputValX2 = analogInputValX2;
         displayData["Mapped"] = String(mappedX);

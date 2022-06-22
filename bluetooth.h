@@ -13,7 +13,7 @@ namespace Controller {
     private:
         friend class Bluetooth;
 
-        ServerCallback(){
+        ServerCallback() {
         }
 
         void onConnect(BLEServer *);
